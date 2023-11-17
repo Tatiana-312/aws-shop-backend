@@ -1,13 +1,11 @@
+import { CORS_ENABLE_HEADERS } from "../../constants/constants";
 import { products } from "../../mocks/products";
+import { StatusCodes } from "http-status-codes";
 
 export const getList = async () => {
   return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Origin": "https://dbo158o6tyb1p.cloudfront.net",
-      "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
-    },
+    statusCode: StatusCodes.OK,
+    headers: CORS_ENABLE_HEADERS,
     body: JSON.stringify(products),
   };
 };
