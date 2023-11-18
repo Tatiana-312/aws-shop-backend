@@ -1,8 +1,6 @@
-const CLOUDFRONT_PATH = "https://dbo158o6tyb1p.cloudfront.net";
-
 export const CORS_ENABLE_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Origin": CLOUDFRONT_PATH,
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 };
 

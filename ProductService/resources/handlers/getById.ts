@@ -11,7 +11,11 @@ export const getById = async (id: string) => {
   if (!result) {
     return {
       statusCode: StatusCodes.NOT_FOUND,
-      body: JSON.stringify({ message: HttpErrorMessages.NOT_FOUND }),
+      headers: CORS_ENABLE_HEADERS,
+      body: JSON.stringify({
+        code: StatusCodes.NOT_FOUND,
+        message: HttpErrorMessages.NOT_FOUND,
+      }),
     };
   }
 

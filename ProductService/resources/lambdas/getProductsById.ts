@@ -1,7 +1,10 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { getById } from "../handlers/getById";
 import { StatusCodes } from "http-status-codes";
-import { HttpErrorMessages } from "../../constants/constants";
+import {
+  CORS_ENABLE_HEADERS,
+  HttpErrorMessages,
+} from "../../constants/constants";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   const productId = event.pathParameters?.id;
@@ -9,7 +12,11 @@ export const handler = async (event: APIGatewayProxyEvent) => {
   if (!productId) {
     return {
       statusCode: StatusCodes.BAD_REQUEST,
-      body: JSON.stringify({ message: HttpErrorMessages.MISSING_ID }),
+      headers: CORS_ENABLE_HEADERS,
+      body: JSON.stringify({
+        code: StatusCodes.BAD_REQUEST,
+        message: HttpErrorMessages.MISSING_ID,
+      }),
     };
   }
 
@@ -20,7 +27,9 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       default:
         return {
           statusCode: StatusCodes.BAD_REQUEST,
+          headers: CORS_ENABLE_HEADERS,
           body: JSON.stringify({
+            code: StatusCodes.BAD_REQUEST,
             message: HttpErrorMessages.INVALID_METHOD_REQUEST,
           }),
         };
@@ -30,6 +39,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
 
     return {
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      headers: CORS_ENABLE_HEADERS,
       body: JSON.stringify({ message: error }),
     };
   }
