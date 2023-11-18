@@ -1,0 +1,98 @@
+openapi: 3.0.0
+
+info:
+  title: Home Library Service
+  description: Products service
+  version: 1.0.0
+servers:
+  - url: https://bmjramn4kk.execute-api.eu-west-1.amazonaws.com/prod/
+    description: Product service
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Product"
+        description:
+          type: string
+          example: "Description of product"
+        price:
+          type: number
+          example: 100
+    NotFoundExceptionData:
+      type: object
+      properties:
+        code:
+          type: number
+          example: 404
+        message:
+          type: string
+          example: "Product not found"
+      required:
+        - message
+        - code
+    ServerException:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get a list of products
+      description: Get a list of products
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerException"
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Product
+      summary: Get single product by id
+      description: Get single product by id
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundExceptionData"
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerException"
