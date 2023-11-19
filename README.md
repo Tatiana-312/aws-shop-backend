@@ -46,5 +46,7 @@ Configuration setup is in jest file `jest.config.js`.
 Unit tests can be run with the following command:
 
 ```shell
-npm run test
+cd ProductService
+
+npm test
 ```
