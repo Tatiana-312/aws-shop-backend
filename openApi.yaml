@@ -5,7 +5,7 @@ info:
   description: Products service
   version: 1.0.0
 servers:
-  - url: https://bmjramn4kk.execute-api.eu-west-1.amazonaws.com/prod/
+  - url: https://k1pea3ah5c.execute-api.eu-west-1.amazonaws.com/prod/
     description: Product service
 components:
   schemas:
