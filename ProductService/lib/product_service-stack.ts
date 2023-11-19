@@ -1,9 +1,9 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 
 export class ProductServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -18,16 +18,19 @@ export class ProductServiceStack extends Stack {
       },
     });
 
-    const getProductsList = new NodejsFunction(this, "getProductsList", {
+    const lambdaGeneralProps = {
       runtime: Runtime.NODEJS_18_X,
-      entry: path.join(__dirname + "/../resources/lambdas/getProductsList.ts"),
       handler: "handler",
+    };
+
+    const getProductsList = new NodejsFunction(this, "getProductsList", {
+      ...lambdaGeneralProps,
+      entry: path.join(__dirname + "/../resources/lambdas/getProductsList.ts"),
     });
 
     const getProductsById = new NodejsFunction(this, "getProductsById", {
-      runtime: Runtime.NODEJS_18_X,
+      ...lambdaGeneralProps,
       entry: path.join(__dirname + "/../resources/lambdas/getProductsById.ts"),
-      handler: "handler",
     });
 
     const products = api.root.addResource("products");

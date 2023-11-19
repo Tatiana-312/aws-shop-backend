@@ -1,11 +1,7 @@
-import { CORS_ENABLE_HEADERS } from "../../constants/constants";
 import { products } from "../../mocks/products";
 import { StatusCodes } from "http-status-codes";
+import { buildResponse } from "../../utils/buildResponse";
 
 export const getList = async () => {
-  return {
-    statusCode: StatusCodes.OK,
-    headers: CORS_ENABLE_HEADERS,
-    body: JSON.stringify(products),
-  };
+  return buildResponse(StatusCodes.OK, products);
 };

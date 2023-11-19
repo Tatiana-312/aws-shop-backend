@@ -1,27 +1,17 @@
-import {
-  CORS_ENABLE_HEADERS,
-  HttpErrorMessages,
-} from "../../constants/constants";
+import { HttpErrorMessages } from "../../constants/constants";
 import { products } from "../../mocks/products";
 import { StatusCodes } from "http-status-codes";
+import { buildResponse } from "../../utils/buildResponse";
 
 export const getById = async (id: string) => {
   const result = products.find((product) => product.id === id);
 
   if (!result) {
-    return {
-      statusCode: StatusCodes.NOT_FOUND,
-      headers: CORS_ENABLE_HEADERS,
-      body: JSON.stringify({
-        code: StatusCodes.NOT_FOUND,
-        message: HttpErrorMessages.NOT_FOUND,
-      }),
-    };
+    return buildResponse(StatusCodes.NOT_FOUND, {
+      code: StatusCodes.NOT_FOUND,
+      message: HttpErrorMessages.NOT_FOUND,
+    });
   }
 
-  return {
-    statusCode: StatusCodes.OK,
-    headers: CORS_ENABLE_HEADERS,
-    body: JSON.stringify(result),
-  };
+  return buildResponse(StatusCodes.OK, result);
 };

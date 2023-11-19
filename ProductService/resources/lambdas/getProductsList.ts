@@ -1,10 +1,8 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { getList } from "../handlers/getList";
 import { StatusCodes } from "http-status-codes";
-import {
-  CORS_ENABLE_HEADERS,
-  HttpErrorMessages,
-} from "../../constants/constants";
+import { HttpErrorMessages } from "../../constants/constants";
+import { buildResponse } from "../../utils/buildResponse";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
@@ -12,22 +10,14 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       case "GET":
         return await getList();
       default:
-        return {
-          statusCode: StatusCodes.BAD_REQUEST,
-          headers: CORS_ENABLE_HEADERS,
-          body: JSON.stringify({
-            code: StatusCodes.BAD_REQUEST,
-            message: HttpErrorMessages.INVALID_METHOD_REQUEST,
-          }),
-        };
+        return buildResponse(StatusCodes.BAD_REQUEST, {
+          code: StatusCodes.BAD_REQUEST,
+          message: HttpErrorMessages.INVALID_METHOD_REQUEST,
+        });
     }
   } catch (error) {
     console.error(error);
 
-    return {
-      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-      headers: CORS_ENABLE_HEADERS,
-      body: JSON.stringify({ message: error }),
-    };
+    return buildResponse(StatusCodes.INTERNAL_SERVER_ERROR, { message: error });
   }
 };
