@@ -1,9 +1,14 @@
+import "dotenv/config";
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import {
+  NodejsFunction,
+  NodejsFunctionProps,
+} from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 export class ProductServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -18,9 +23,13 @@ export class ProductServiceStack extends Stack {
       },
     });
 
-    const lambdaGeneralProps = {
+    const lambdaGeneralProps: Partial<NodejsFunctionProps> = {
       runtime: Runtime.NODEJS_18_X,
       handler: "handler",
+      environment: {
+        PRODUCTS_TABLE_NAME: process.env.PRODUCTS_TABLE_NAME!,
+        STOCKS_TABLE_NAME: process.env.STOCKS_TABLE_NAME!,
+      },
     };
 
     const getProductsList = new NodejsFunction(this, "getProductsList", {
@@ -32,6 +41,17 @@ export class ProductServiceStack extends Stack {
       ...lambdaGeneralProps,
       entry: path.join(__dirname + "/../resources/lambdas/getProductsById.ts"),
     });
+
+    const dynamodbAccessPolicy = new PolicyStatement({
+      actions: ["dynamodb:*"],
+      resources: ["*"],
+    });
+
+    getProductsList.role?.attachInlinePolicy(
+      new Policy(this, "dynamodbAccessPolicy", {
+        statements: [dynamodbAccessPolicy],
+      })
+    );
 
     const products = api.root.addResource("products");
     const product = products.addResource("{id}");
