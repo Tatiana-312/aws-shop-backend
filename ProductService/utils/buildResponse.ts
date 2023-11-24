@@ -4,12 +4,7 @@ import { ExceptionData } from "../models/exceptionData";
 
 export const buildResponse = (
   statusCode: number,
-  body:
-    | Product
-    | JoinedProduct[]
-    | ExceptionData
-    | Record<string, string | number>[]
-    | undefined
+  body: JoinedProduct | JoinedProduct[] | ExceptionData
 ) => ({
   statusCode: statusCode,
   headers: CORS_ENABLE_HEADERS,

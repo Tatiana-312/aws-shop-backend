@@ -17,11 +17,8 @@ export const getList = async () => {
     TableName: process.env.STOCKS_TABLE_NAME,
   });
 
-  const productsResult = await docClient.send(productsCommand);
-  const stocksResult = await docClient.send(stocksCommand);
-
-  const productItems = productsResult.Items;
-  const stockItems = stocksResult.Items;
+  const productItems = (await docClient.send(productsCommand)).Items;
+  const stockItems = (await docClient.send(stocksCommand)).Items;
 
   const joinedResult = stockItems?.reduce((resultArr, stock) => {
     const relatedProduct = productItems?.find(
