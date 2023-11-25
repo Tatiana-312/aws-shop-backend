@@ -54,13 +54,20 @@ export class ProductServiceStack extends Stack {
       entry: path.join(__dirname + "/../resources/lambdas/getProductsById.ts"),
     });
 
+    const createProduct = new NodejsFunction(this, "createProduct", {
+      ...lambdaGeneralProps,
+      entry: path.join(__dirname + "/../resources/lambdas/createProduct.ts"),
+    });
+
     const products = api.root.addResource("products");
     const product = products.addResource("{id}");
 
     const productsIntegration = new LambdaIntegration(getProductsList);
     const productIntegration = new LambdaIntegration(getProductsById);
+    const createProductIntegration = new LambdaIntegration(createProduct);
 
     products.addMethod("GET", productsIntegration);
+    products.addMethod("POST", createProductIntegration);
     product.addMethod("GET", productIntegration);
   }
 }
