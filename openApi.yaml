@@ -5,7 +5,7 @@ info:
   description: Products service
   version: 1.0.0
 servers:
-  - url: https://k1pea3ah5c.execute-api.eu-west-1.amazonaws.com/prod/
+  - url: https://4y8wnbgpcc.execute-api.eu-west-1.amazonaws.com/prod/
     description: Product service
 components:
   schemas:
@@ -24,6 +24,43 @@ components:
         price:
           type: number
           example: 100
+    Stock:
+      type: object
+      properties:
+        product_id:
+          type: string
+        count:
+          type: number
+          example: 2
+
+    Body:
+      properties:
+        title:
+          type: string
+          example: "Product"
+        description:
+          type: string
+          example: "Description of product"
+        price:
+          type: number
+          example: 100
+        count:
+          type: number
+          example: 2
+      required:
+        - title
+        - description
+        - price
+        - count
+    CreateResponse:
+      type: object
+      properties:
+        product:
+          $ref: "#/components/schemas/Product"
+        stock:
+          $ref: "#/components/schemas/Stock"
+        response:
+          type: object
     NotFoundExceptionData:
       type: object
       properties:
@@ -33,6 +70,18 @@ components:
         message:
           type: string
           example: "Product not found"
+      required:
+        - message
+        - code
+    ValidationError:
+      type: object
+      properties:
+        code:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: "Some validation error"
       required:
         - message
         - code
@@ -59,6 +108,35 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Product"
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerException"
+    post:
+      tags:
+        - Products
+      summary: Create a product
+      description: Create a product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body"
+      responses:
+        200:
+          description: Product and stock created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateResponse"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
         500:
           description: Internal Server Error
           content:
