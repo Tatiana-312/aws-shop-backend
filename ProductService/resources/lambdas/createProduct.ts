@@ -5,10 +5,19 @@ import { HttpErrorMessages } from "../../constants/constants";
 import { buildResponse } from "../../utils/buildResponse";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
+  const body = event.body;
+
+  if (!body) {
+    return buildResponse(StatusCodes.BAD_REQUEST, {
+      code: StatusCodes.BAD_REQUEST,
+      message: HttpErrorMessages.MISSING_BODY,
+    });
+  }
+
   try {
     switch (event.httpMethod) {
       case "POST":
-        return await create(event.body);
+        return await create(body);
       default:
         return buildResponse(StatusCodes.BAD_REQUEST, {
           code: StatusCodes.BAD_REQUEST,

@@ -2,7 +2,7 @@ import "dotenv/config";
 import { HttpErrorMessages } from "../../constants/constants";
 import { StatusCodes } from "http-status-codes";
 import { buildResponse } from "../../utils/buildResponse";
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { JoinedProduct } from "../../models/product";
 

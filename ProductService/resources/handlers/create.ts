@@ -4,26 +4,18 @@ import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { buildResponse } from "../../utils/buildResponse";
 import { StatusCodes } from "http-status-codes";
-import { HttpErrorMessages } from "../../constants/constants";
 import { CreateBody, bodySchema } from "../../models/product";
 import { omit } from "lodash";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
-export const create = async (body: string | null) => {
-  let parsedBody: CreateBody;
-
+export const create = async (body: string) => {
   try {
-    if (!body) {
-      return buildResponse(StatusCodes.BAD_REQUEST, {
-        code: StatusCodes.BAD_REQUEST,
-        message: HttpErrorMessages.MISSING_BODY,
-      });
-    }
+    let validParsedBody: CreateBody;
 
     try {
-      parsedBody = await bodySchema.validate(JSON.parse(body), {
+      validParsedBody = await bodySchema.validate(JSON.parse(body), {
         strict: true,
       });
     } catch (error) {
@@ -35,12 +27,12 @@ export const create = async (body: string | null) => {
 
     const product = {
       id: uuidv4(),
-      ...omit(parsedBody, ["count"]),
+      ...omit(validParsedBody, ["count"]),
     };
 
     const stock = {
       product_id: product.id,
-      count: parsedBody.count,
+      count: validParsedBody.count,
     };
 
     const productPutCommand = new PutCommand({
