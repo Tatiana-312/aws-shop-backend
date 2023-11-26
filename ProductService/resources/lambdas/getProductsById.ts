@@ -7,6 +7,11 @@ import { buildResponse } from "../../utils/buildResponse";
 export const handler = async (event: APIGatewayProxyEvent) => {
   const productId = event.pathParameters?.id;
 
+  console.log(`
+  REQUEST: ${event.httpMethod}, ${event.path}
+  ID: ${productId}
+  `);
+
   if (!productId) {
     return buildResponse(StatusCodes.BAD_REQUEST, {
       code: StatusCodes.BAD_REQUEST,

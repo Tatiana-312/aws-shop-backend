@@ -29,7 +29,7 @@ export class ProductServiceStack extends Stack {
 
     role.addToPolicy(
       new PolicyStatement({
-        actions: ["dynamodb:*"],
+        actions: ["dynamodb:*", "logs:PutLogEvents"],
         resources: ["*"],
       })
     );
