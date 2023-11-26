@@ -1,6 +1,9 @@
 import "dotenv/config";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  TransactWriteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { buildResponse } from "../../utils/buildResponse";
 import { StatusCodes } from "http-status-codes";
@@ -35,28 +38,29 @@ export const create = async (body: string) => {
       count: validParsedBody.count,
     };
 
-    const productPutCommand = new PutCommand({
-      TableName: process.env.PRODUCTS_TABLE_NAME,
-      Item: product,
+    const transactCommand = new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: "products",
+            Item: product,
+          },
+        },
+        {
+          Put: {
+            TableName: "stocks",
+            Item: stock,
+          },
+        },
+      ],
     });
 
-    const stockPutCommand = new PutCommand({
-      TableName: process.env.STOCKS_TABLE_NAME,
-      Item: stock,
-    });
-
-    const productResponse = await docClient.send(productPutCommand);
-    const stockResponse = await docClient.send(stockPutCommand);
+    const transactResponse = await docClient.send(transactCommand);
 
     const resultResponse = {
-      product: {
-        item: { ...product },
-        response: { ...productResponse },
-      },
-      stock: {
-        item: { ...stock },
-        response: { ...stockResponse },
-      },
+      product: { ...product },
+      stock: { ...stock },
+      response: { ...transactResponse },
     };
 
     return buildResponse(StatusCodes.OK, resultResponse);
