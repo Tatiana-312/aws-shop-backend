@@ -1,4 +1,5 @@
 import { PutCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { InferType, number, object, string } from "yup";
 
 export interface Product {
   id: string;
@@ -29,3 +30,12 @@ export interface JoinedCreateResponse {
   product: ProductCreateResponse;
   stock: StockCreateResponse;
 }
+
+export const bodySchema = object({
+  title: string().required(),
+  description: string().required(),
+  price: number().required(),
+  count: number().required(),
+});
+
+export type CreateBody = InferType<typeof bodySchema>;
