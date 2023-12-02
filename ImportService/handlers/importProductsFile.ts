@@ -1,4 +1,4 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildResponse } from "../utils/buildResponse";
 import { HttpErrorMessages } from "../constants/constants";
@@ -21,7 +21,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     }
 
     const s3Client = new S3Client();
-    const command = new GetObjectCommand({
+    const command = new PutObjectCommand({
       Bucket: "my-import-products-bucket",
       Key: `uploaded/${fileName}`,
     });
