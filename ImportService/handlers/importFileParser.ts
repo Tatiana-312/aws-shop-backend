@@ -3,13 +3,14 @@ import csv = require("csv-parser");
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 import { moveParsedFile } from "../utils/moveParsedFile";
+import { Product } from "../models/types";
 
 export const handler = async (event: S3Event) => {
   console.log(`
   EVENT: ${JSON.stringify(event, null, 4)}
   `);
 
-  const result: any = [];
+  const result: Product[] = [];
 
   const key = event.Records[0].s3.object.key;
   const bucketName = event.Records[0].s3.bucket.name;
