@@ -1,11 +1,14 @@
 import { CORS_ENABLE_HEADERS } from "../constants/constants";
-import { Product } from "../models/product";
+import { JoinedCreateResponse, JoinedProduct } from "../models/product";
 import { ExceptionData } from "../models/exceptionData";
 
-export const buildResponse = (
-  statusCode: number,
-  body: Product | Product[] | ExceptionData
-) => ({
+type Body =
+  | JoinedProduct
+  | JoinedProduct[]
+  | ExceptionData
+  | JoinedCreateResponse;
+
+export const buildResponse = (statusCode: number, body: Body) => ({
   statusCode: statusCode,
   headers: CORS_ENABLE_HEADERS,
   body: JSON.stringify(body),

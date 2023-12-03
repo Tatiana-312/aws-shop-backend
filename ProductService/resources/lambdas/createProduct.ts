@@ -1,28 +1,28 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { getById } from "../handlers/getById";
+import { create } from "../handlers/create";
 import { StatusCodes } from "http-status-codes";
 import { HttpErrorMessages } from "../../constants/constants";
 import { buildResponse } from "../../utils/buildResponse";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
-  const productId = event.pathParameters?.id;
+  const body = event.body;
 
   console.log(`
   REQUEST: ${event.httpMethod}, ${event.path}
-  ID: ${productId}
+  BODY: ${body}
   `);
 
-  if (!productId) {
+  if (!body) {
     return buildResponse(StatusCodes.BAD_REQUEST, {
       code: StatusCodes.BAD_REQUEST,
-      message: HttpErrorMessages.MISSING_ID,
+      message: HttpErrorMessages.MISSING_BODY,
     });
   }
 
   try {
     switch (event.httpMethod) {
-      case "GET":
-        return await getById(productId);
+      case "POST":
+        return await create(body);
       default:
         return buildResponse(StatusCodes.BAD_REQUEST, {
           code: StatusCodes.BAD_REQUEST,

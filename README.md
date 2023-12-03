@@ -17,7 +17,7 @@ To use API Documentation you need to copy `openApi.yaml` file, and past it to th
 
 # Product Service
 
-Deploy: https://k1pea3ah5c.execute-api.eu-west-1.amazonaws.com/prod/
+Deploy: https://4y8wnbgpcc.execute-api.eu-west-1.amazonaws.com/prod/
 
 ## Developing
 

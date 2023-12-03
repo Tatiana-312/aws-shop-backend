@@ -5,6 +5,8 @@ import { HttpErrorMessages } from "../../constants/constants";
 import { buildResponse } from "../../utils/buildResponse";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
+  console.log(`REQUEST: ${event.httpMethod}, ${event.path}`);
+
   try {
     switch (event.httpMethod) {
       case "GET":

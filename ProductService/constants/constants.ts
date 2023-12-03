@@ -8,4 +8,5 @@ export enum HttpErrorMessages {
   NOT_FOUND = "Product not found",
   INVALID_METHOD_REQUEST = "Invalid HTTP method",
   MISSING_ID = "Missing path parameter: id",
+  MISSING_BODY = "Missing body",
 }
