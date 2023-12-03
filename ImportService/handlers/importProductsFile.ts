@@ -1,8 +1,9 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildResponse } from "../utils/buildResponse";
-import { HttpErrorMessages } from "../constants/constants";
+import { BUCKET_NAME, HttpErrorMessages } from "../constants/constants";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { StatusCodes } from "http-status-codes";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
@@ -14,15 +15,15 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     FileName: ${fileName}`);
 
     if (!fileName) {
-      return buildResponse(400, {
-        code: 400,
+      return buildResponse(StatusCodes.BAD_REQUEST, {
+        code: StatusCodes.BAD_REQUEST,
         message: HttpErrorMessages.MISSING_NAME,
       });
     }
 
     const s3Client = new S3Client();
     const command = new PutObjectCommand({
-      Bucket: "my-import-products-bucket",
+      Bucket: BUCKET_NAME,
       Key: `uploaded/${fileName}`,
     });
 
@@ -30,18 +31,18 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       expiresIn: 3600,
     });
 
-    console.log("signedUrl", signedUrl);
+    console.log("signedURL", signedUrl);
 
-    return buildResponse(200, {
-      code: 200,
+    return buildResponse(StatusCodes.OK, {
+      code: StatusCodes.OK,
       signedUrl: signedUrl,
     });
   } catch (error) {
     console.error(error);
 
-    return buildResponse(500, {
-      code: 500,
-      message: "Internal Server Error",
+    return buildResponse(StatusCodes.INTERNAL_SERVER_ERROR, {
+      code: StatusCodes.INTERNAL_SERVER_ERROR,
+      message: error,
     });
   }
 };
