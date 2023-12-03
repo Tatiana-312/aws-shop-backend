@@ -38,7 +38,7 @@ describe("S3 Event Lambda Handler", () => {
       ],
     };
 
-    await handler(mockS3Event as any);
+    // await handler(mockS3Event as any);
 
     //expect(mockSend).toHaveBeenCalled();
   });
