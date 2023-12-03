@@ -1,14 +1,38 @@
-# Welcome to your CDK TypeScript project
+# Welcome to Import Service
 
-This is a blank project for CDK development with TypeScript.
+This service allows you to upload file in s3 bucket and parse it.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+Deploy: https://zp16rkpg2b.execute-api.eu-west-1.amazonaws.com/prod/import
 
-## Useful commands
+## Developing
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+#### Built With
+
+- [Node.js](https://nodejs.org/en/)
+- [npm](https://www.npmjs.com/)
+- [Typescript](https://www.typescriptlang.org/)
+- [AWS CDK](https://aws.amazon.com/cdk/)
+- [AWS SDK](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/)
+
+## Install dependencies
+
+```shell
+cd ImportService
+
+npm install
+```
+
+## Tests
+
+The test infrastructure bases on [Jest](https://facebook.github.io/jest/).
+Configuration setup is in jest file `jest.config.js`.
+
+### running tests
+
+Unit tests can be run with the following command:
+
+```shell
+cd ImportService
+
+npm test
+```
