@@ -2,6 +2,8 @@ import * as cdk from "aws-cdk-lib";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Bucket, EventType } from "aws-cdk-lib/aws-s3";
+import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import * as path from "path";
 
@@ -24,10 +26,28 @@ export class ImportServiceStack extends cdk.Stack {
       entry: path.join(__dirname + "/../handlers/importProductsFile.ts"),
     });
 
+    const importFileParser = new NodejsFunction(this, "importFileParser", {
+      runtime: Runtime.NODEJS_18_X,
+      handler: "handler",
+      entry: path.join(__dirname + "/../handlers/importFileParser.ts"),
+    });
+
     const importResource = api.root.addResource("import");
 
     const importIntegration = new LambdaIntegration(importProductsFile);
 
     importResource.addMethod("GET", importIntegration);
+
+    const s3Bucket = Bucket.fromBucketName(
+      this,
+      "ImportProductsBucket",
+      "my-import-products-bucket"
+    );
+
+    s3Bucket.addEventNotification(
+      EventType.OBJECT_CREATED,
+      new LambdaDestination(importFileParser),
+      { prefix: "uploaded/" }
+    );
   }
 }
