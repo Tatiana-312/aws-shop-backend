@@ -36,3 +36,7 @@ cd ProductService
 
 npm test
 ```
+
+## Run
+
+To use environments you should rename `.env-test` to `.env`
