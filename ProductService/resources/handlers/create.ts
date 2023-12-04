@@ -42,13 +42,13 @@ export const create = async (body: string) => {
       TransactItems: [
         {
           Put: {
-            TableName: "products",
+            TableName: process.env.PRODUCTS_TABLE_NAME,
             Item: product,
           },
         },
         {
           Put: {
-            TableName: "stocks",
+            TableName: process.env.STOCKS_TABLE_NAME,
             Item: stock,
           },
         },
@@ -63,7 +63,7 @@ export const create = async (body: string) => {
       response: { ...transactResponse },
     };
 
-    return buildResponse(StatusCodes.OK, resultResponse);
+    return buildResponse(StatusCodes.CREATED, resultResponse);
   } catch (error) {
     console.error(error);
 
