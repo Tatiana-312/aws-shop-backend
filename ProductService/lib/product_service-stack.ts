@@ -8,9 +8,15 @@ import {
 import { join } from "path";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
-import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import {
+  Effect,
+  PolicyStatement,
+  Role,
+  ServicePrincipal,
+} from "aws-cdk-lib/aws-iam";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { Topic } from "aws-cdk-lib/aws-sns";
 
 export class ProductServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -31,7 +37,7 @@ export class ProductServiceStack extends Stack {
 
     role.addToPolicy(
       new PolicyStatement({
-        actions: ["dynamodb:*", "logs:PutLogEvents"],
+        actions: ["dynamodb:*", "logs:*"],
         resources: ["*"],
       })
     );
@@ -72,11 +78,24 @@ export class ProductServiceStack extends Stack {
 
     const catalogItemsQueue = new Queue(this, "catalog-items-sqs");
 
+    const catalogItemsQueuePolicy = new PolicyStatement({
+      effect: Effect.ALLOW,
+      principals: [new ServicePrincipal("lambda.amazonaws.com")],
+      actions: ["sqs:SendMessage", "sqs:ReceiveMessage"],
+      resources: ["*"],
+    });
+
+    catalogItemsQueue.addToResourcePolicy(catalogItemsQueuePolicy);
+
     catalogBatchProcess.addEventSource(
       new SqsEventSource(catalogItemsQueue, {
         batchSize: 5,
       })
     );
+
+    // const createProductTopic = new Topic(this, "create-product-topic");
+
+    // createProductTopic.addSubscription();
 
     const products = api.root.addResource("products");
     const product = products.addResource("{id}");
