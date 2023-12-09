@@ -4,11 +4,9 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 
-export const moveParsedFile = async (
-  s3Client: S3Client,
-  key: string,
-  bucketName: string
-) => {
+export const moveParsedFile = async (key: string, bucketName: string) => {
+  const s3Client = new S3Client();
+
   const copyObjectCommand = new CopyObjectCommand({
     Bucket: bucketName,
     CopySource: `${bucketName}/${key}`,

@@ -1,39 +1,33 @@
 import { S3Event } from "aws-lambda";
 import csv = require("csv-parser");
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { Readable } from "stream";
 import { moveParsedFile } from "../utils/moveParsedFile";
 import { Product } from "../models/types";
+import { BUCKET_NAME } from "../constants/constants";
+import { getObjectStream } from "../utils/getObjectStream";
+import { sendMessageToSqs } from "../utils/sendMessageToSqs";
 
 export const handler = async (event: S3Event) => {
   console.log(`
   EVENT: ${JSON.stringify(event, null, 4)}
   `);
 
-  const result: Product[] = [];
+  const products: Product[] = [];
 
-  const key = event.Records[0].s3.object.key;
-  const bucketName = event.Records[0].s3.bucket.name;
+  for await (const record of event.Records) {
+    const key = record.s3.object.key;
+    const readableStream = await getObjectStream(key, BUCKET_NAME);
 
-  const s3Client = new S3Client();
-
-  const getObjectCommand = new GetObjectCommand({
-    Bucket: bucketName,
-    Key: key,
-  });
-
-  const readableStream = (await s3Client.send(getObjectCommand))
-    .Body as Readable;
-
-  readableStream
-    .pipe(csv())
-    .on("data", (data) => {
-      result.push(data);
-      console.log("RECORD, PARSED PRODUCT", data);
-    })
-    .on("end", () => {
-      console.log("RESULT, ALL PARSED PRODUCTS", result);
+    await new Promise((resolve, reject) => {
+      readableStream
+        .pipe(csv())
+        .on("data", (data) => products.push(data))
+        .on("end", () => {
+          resolve(products);
+        })
+        .on("error", reject);
     });
 
-  await moveParsedFile(s3Client, key, bucketName);
+    await sendMessageToSqs(products);
+    await moveParsedFile(key, BUCKET_NAME);
+  }
 };

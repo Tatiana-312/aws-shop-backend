@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Bucket, EventType } from "aws-cdk-lib/aws-s3";
@@ -20,6 +21,17 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    const role = new Role(this, "sqsAccess", {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+    });
+
+    role.addToPolicy(
+      new PolicyStatement({
+        actions: ["sqs:*", "logs:*"],
+        resources: ["*"],
+      })
+    );
+
     const importProductsFile = new NodejsFunction(this, "importProductsFile", {
       runtime: Runtime.NODEJS_18_X,
       handler: "handler",
@@ -30,6 +42,7 @@ export class ImportServiceStack extends cdk.Stack {
       runtime: Runtime.NODEJS_18_X,
       handler: "handler",
       entry: path.join(__dirname + "/../handlers/importFileParser.ts"),
+      role,
     });
 
     const importResource = api.root.addResource("import");
