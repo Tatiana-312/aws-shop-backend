@@ -16,7 +16,9 @@ import {
 } from "aws-cdk-lib/aws-iam";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
-import { Topic } from "aws-cdk-lib/aws-sns";
+import { SubscriptionFilter, Topic } from "aws-cdk-lib/aws-sns";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
+import { Emails } from "../constants/constants";
 
 export class ProductServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -31,13 +33,13 @@ export class ProductServiceStack extends Stack {
       },
     });
 
-    const role = new Role(this, "dynamodbAccessRole", {
+    const role = new Role(this, "resourcesAccessRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
     });
 
     role.addToPolicy(
       new PolicyStatement({
-        actions: ["dynamodb:*", "logs:*"],
+        actions: ["dynamodb:*", "logs:*", "sns:publish"],
         resources: ["*"],
       })
     );
@@ -93,9 +95,27 @@ export class ProductServiceStack extends Stack {
       })
     );
 
-    // const createProductTopic = new Topic(this, "create-product-topic");
+    const createProductTopic = new Topic(this, "create-product-topic");
 
-    // createProductTopic.addSubscription();
+    createProductTopic.addSubscription(
+      new EmailSubscription(Emails.HIGHT_PRICE, {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            greaterThan: 99,
+          }),
+        },
+      })
+    );
+
+    createProductTopic.addSubscription(
+      new EmailSubscription(Emails.LOW_PRICE, {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            lessThan: 100,
+          }),
+        },
+      })
+    );
 
     const products = api.root.addResource("products");
     const product = products.addResource("{id}");
