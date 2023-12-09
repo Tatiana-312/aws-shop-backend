@@ -1,8 +1,8 @@
-# Welcome to Product Service
+# Welcome to Import Service
 
-This is a serverless API which allows you to get and create products.
+This service allows you to upload file in s3 bucket and parse it.
 
-Deploy: https://4y8wnbgpcc.execute-api.eu-west-1.amazonaws.com/prod/
+Deploy: https://zp16rkpg2b.execute-api.eu-west-1.amazonaws.com/prod/import
 
 ## Developing
 
@@ -17,7 +17,7 @@ Deploy: https://4y8wnbgpcc.execute-api.eu-west-1.amazonaws.com/prod/
 ## Install dependencies
 
 ```shell
-cd ProductService
+cd ImportService
 
 npm install
 ```
@@ -32,7 +32,7 @@ Configuration setup is in jest file `jest.config.js`.
 Unit tests can be run with the following command:
 
 ```shell
-cd ProductService
+cd ImportService
 
 npm test
 ```
