@@ -56,7 +56,7 @@ export const create = async (body: string) => {
 
     const transactResponse = await docClient.send(transactCommand);
 
-    console.log("Products from file successfully added into DB");
+    console.log("Products successfully added into DB");
 
     const resultResponse = {
       product: { ...product },

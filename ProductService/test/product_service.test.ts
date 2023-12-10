@@ -11,8 +11,8 @@ describe("ProductServiceStack", () => {
     template = Template.fromStack(stack);
   });
 
-  test("Stack Contains Three Lambda Functions And One Api Gateway", () => {
-    template.resourceCountIs("AWS::Lambda::Function", 3);
+  test("Stack Contains Four Lambda Functions And One Api Gateway", () => {
+    template.resourceCountIs("AWS::Lambda::Function", 4);
     template.resourceCountIs("AWS::ApiGateway::RestApi", 1);
   });
 
