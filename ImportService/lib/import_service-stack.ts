@@ -1,12 +1,25 @@
 import * as cdk from "aws-cdk-lib";
-import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import {
+  AuthorizationType,
+  Cors,
+  IdentitySource,
+  LambdaIntegration,
+  ResponseType,
+  RestApi,
+  TokenAuthorizer,
+} from "aws-cdk-lib/aws-apigateway";
 import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Runtime, Function } from "aws-cdk-lib/aws-lambda";
+import {
+  NodejsFunction,
+  NodejsFunctionProps,
+} from "aws-cdk-lib/aws-lambda-nodejs";
 import { Bucket, EventType } from "aws-cdk-lib/aws-s3";
 import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
-import * as path from "path";
+import { join } from "path";
+import "dotenv/config";
+import { Duration } from "aws-cdk-lib";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -17,7 +30,16 @@ export class ImportServiceStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
-        allowHeaders: Cors.DEFAULT_HEADERS,
+      },
+    });
+
+    api.addGatewayResponse("GatewayResponse4XX", {
+      type: cdk.aws_apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers":
+          "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "Access-Control-Allow-Methods": "'OPTIONS,GET,PUT'",
       },
     });
 
@@ -32,24 +54,54 @@ export class ImportServiceStack extends cdk.Stack {
       })
     );
 
-    const importProductsFile = new NodejsFunction(this, "importProductsFile", {
+    const lambdaGeneralProps: Partial<NodejsFunctionProps> = {
       runtime: Runtime.NODEJS_18_X,
       handler: "handler",
-      entry: path.join(__dirname + "/../handlers/importProductsFile.ts"),
+    };
+
+    const importProductsFile = new NodejsFunction(this, "importProductsFile", {
+      ...lambdaGeneralProps,
+      entry: join(__dirname + "/../handlers/importProductsFile.ts"),
     });
 
     const importFileParser = new NodejsFunction(this, "importFileParser", {
-      runtime: Runtime.NODEJS_18_X,
-      handler: "handler",
-      entry: path.join(__dirname + "/../handlers/importFileParser.ts"),
+      ...lambdaGeneralProps,
+      entry: join(__dirname + "/../handlers/importFileParser.ts"),
       role,
+    });
+
+    const basicAuthorizer = Function.fromFunctionArn(
+      this,
+      "basicAuthorizerLambda",
+      process.env.AUTHORIZER_LAMBDA_ARN!
+    );
+
+    const assumeRole = new Role(this, "TokenAuthorizerRole", {
+      assumedBy: new ServicePrincipal("apigateway.amazonaws.com"),
+    });
+
+    assumeRole.addToPolicy(
+      new PolicyStatement({
+        actions: ["lambda:InvokeFunction"],
+        resources: [process.env.AUTHORIZER_LAMBDA_ARN!],
+      })
+    );
+
+    const authorizer = new TokenAuthorizer(this, "basicAuthorizer", {
+      handler: basicAuthorizer,
+      identitySource: IdentitySource.header("authorization"),
+      resultsCacheTtl: Duration.seconds(0),
+      assumeRole,
     });
 
     const importResource = api.root.addResource("import");
 
     const importIntegration = new LambdaIntegration(importProductsFile);
 
-    importResource.addMethod("GET", importIntegration);
+    importResource.addMethod("GET", importIntegration, {
+      authorizer,
+      authorizationType: AuthorizationType.CUSTOM,
+    });
 
     const s3Bucket = Bucket.fromBucketName(
       this,

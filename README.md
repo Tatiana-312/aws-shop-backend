@@ -1,11 +1,12 @@
 # AWS-SHOP-BACKEND
 
-This project is a monorepo which contains the backend services.
+This project is a repo which contains the backend services.
 
 ## Services
 
 - Product Service
 - Import Service
+- Authorization Service
 
 See detailed information on each service in the README in the corresponding folders
 
