@@ -27,7 +27,7 @@ export const handler = async (
     const base64Credentials = authorizationToken.split(" ")[1];
 
     if (!authorizationToken) {
-      console.log("No Authorization token");
+      console.log("Authorization header is not provided");
       throw Error("Unauthorized");
     }
 
