@@ -1,13 +1,15 @@
 import * as cdk from "aws-cdk-lib";
 import {
+  AuthorizationType,
   Cors,
   IdentitySource,
   LambdaIntegration,
+  ResponseType,
   RestApi,
   TokenAuthorizer,
 } from "aws-cdk-lib/aws-apigateway";
 import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { Runtime, Function } from "aws-cdk-lib/aws-lambda";
 import {
   NodejsFunction,
   NodejsFunctionProps,
@@ -17,6 +19,7 @@ import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import { join } from "path";
 import "dotenv/config";
+import { Duration } from "aws-cdk-lib";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -27,8 +30,23 @@ export class ImportServiceStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
-        allowHeaders: Cors.DEFAULT_HEADERS,
       },
+    });
+
+    const responseHeaders = {
+      "Access-Control-Allow-Origin": "'*'",
+    };
+
+    api.addGatewayResponse("GatewayDeniedResponse", {
+      type: ResponseType.ACCESS_DENIED,
+      statusCode: "403",
+      responseHeaders,
+    });
+
+    api.addGatewayResponse("GatewayUnauthorizedResponse", {
+      type: ResponseType.UNAUTHORIZED,
+      statusCode: "401",
+      responseHeaders,
     });
 
     const role = new Role(this, "sqsAccess", {
@@ -58,19 +76,28 @@ export class ImportServiceStack extends cdk.Stack {
       role,
     });
 
-    const basicAuthorizer = new NodejsFunction(this, "basicAuthorizerLambda", {
-      ...lambdaGeneralProps,
-      entry: join(
-        __dirname + "/../../AuthorizationService/handlers/basicAuthorizer.ts"
-      ),
-      environment: {
-        tatiana312: process.env.tatiana312!,
-      },
+    const basicAuthorizer = Function.fromFunctionArn(
+      this,
+      "basicAuthorizerLambda",
+      process.env.AUTHORIZER_LAMBDA_ARN!
+    );
+
+    const assumeRole = new Role(this, "TokenAuthorizerRole", {
+      assumedBy: new ServicePrincipal("apigateway.amazonaws.com"),
     });
+
+    assumeRole.addToPolicy(
+      new PolicyStatement({
+        actions: ["lambda:InvokeFunction"],
+        resources: [process.env.AUTHORIZER_LAMBDA_ARN!],
+      })
+    );
 
     const authorizer = new TokenAuthorizer(this, "basicAuthorizer", {
       handler: basicAuthorizer,
       identitySource: IdentitySource.header("authorization"),
+      resultsCacheTtl: Duration.seconds(0),
+      assumeRole,
     });
 
     const importResource = api.root.addResource("import");
@@ -79,6 +106,7 @@ export class ImportServiceStack extends cdk.Stack {
 
     importResource.addMethod("GET", importIntegration, {
       authorizer,
+      authorizationType: AuthorizationType.CUSTOM,
     });
 
     const s3Bucket = Bucket.fromBucketName(
