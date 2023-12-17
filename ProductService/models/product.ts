@@ -24,10 +24,10 @@ export interface JoinedCreateResponse {
 }
 
 export const bodySchema = object({
-  title: string().required(),
-  description: string().required(),
-  price: number().required(),
-  count: number().required(),
+  title: string().required().strict(),
+  description: string().required().strict(),
+  price: number().required().positive(),
+  count: number().required().positive(),
 });
 
 export type CreateBody = InferType<typeof bodySchema>;

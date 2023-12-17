@@ -5,10 +5,20 @@ import {
   NodejsFunction,
   NodejsFunctionProps,
 } from "aws-cdk-lib/aws-lambda-nodejs";
-import * as path from "path";
+import { join } from "path";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
-import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import {
+  Effect,
+  PolicyStatement,
+  Role,
+  ServicePrincipal,
+} from "aws-cdk-lib/aws-iam";
+import { Queue } from "aws-cdk-lib/aws-sqs";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { SubscriptionFilter, Topic } from "aws-cdk-lib/aws-sns";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
+import { Emails } from "../constants/constants";
 
 export class ProductServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -23,13 +33,13 @@ export class ProductServiceStack extends Stack {
       },
     });
 
-    const role = new Role(this, "dynamodbAccessRole", {
+    const role = new Role(this, "resourcesAccessRole", {
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
     });
 
     role.addToPolicy(
       new PolicyStatement({
-        actions: ["dynamodb:*", "logs:PutLogEvents"],
+        actions: ["dynamodb:*", "logs:*", "sns:publish"],
         resources: ["*"],
       })
     );
@@ -46,18 +56,66 @@ export class ProductServiceStack extends Stack {
 
     const getProductsList = new NodejsFunction(this, "getProductsList", {
       ...lambdaGeneralProps,
-      entry: path.join(__dirname + "/../resources/lambdas/getProductsList.ts"),
+      entry: join(__dirname + "/../resources/lambdas/getProductsList.ts"),
     });
 
     const getProductsById = new NodejsFunction(this, "getProductsById", {
       ...lambdaGeneralProps,
-      entry: path.join(__dirname + "/../resources/lambdas/getProductsById.ts"),
+      entry: join(__dirname + "/../resources/lambdas/getProductsById.ts"),
     });
 
     const createProduct = new NodejsFunction(this, "createProduct", {
       ...lambdaGeneralProps,
-      entry: path.join(__dirname + "/../resources/lambdas/createProduct.ts"),
+      entry: join(__dirname + "/../resources/lambdas/createProduct.ts"),
     });
+
+    const catalogBatchProcess = new NodejsFunction(
+      this,
+      "catalogBatchProcess",
+      {
+        ...lambdaGeneralProps,
+        entry: join(__dirname + "/../resources/lambdas/catalogBatchProcess.ts"),
+      }
+    );
+
+    const catalogItemsQueue = new Queue(this, "catalog-items-sqs");
+
+    const catalogItemsQueuePolicy = new PolicyStatement({
+      effect: Effect.ALLOW,
+      principals: [new ServicePrincipal("lambda.amazonaws.com")],
+      actions: ["sqs:SendMessage", "sqs:ReceiveMessage"],
+      resources: ["*"],
+    });
+
+    catalogItemsQueue.addToResourcePolicy(catalogItemsQueuePolicy);
+
+    catalogBatchProcess.addEventSource(
+      new SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+      })
+    );
+
+    const createProductTopic = new Topic(this, "create-product-topic");
+
+    createProductTopic.addSubscription(
+      new EmailSubscription(Emails.HIGHT_PRICE, {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            greaterThan: 99,
+          }),
+        },
+      })
+    );
+
+    createProductTopic.addSubscription(
+      new EmailSubscription(Emails.LOW_PRICE, {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            lessThan: 100,
+          }),
+        },
+      })
+    );
 
     const products = api.root.addResource("products");
     const product = products.addResource("{id}");

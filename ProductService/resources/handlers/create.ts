@@ -18,10 +18,9 @@ export const create = async (body: string) => {
     let validParsedBody: CreateBody;
 
     try {
-      validParsedBody = await bodySchema.validate(JSON.parse(body), {
-        strict: true,
-      });
+      validParsedBody = await bodySchema.validate(JSON.parse(body));
     } catch (error) {
+      console.log(error);
       return buildResponse(StatusCodes.BAD_REQUEST, {
         code: StatusCodes.BAD_REQUEST,
         message: (error as Error).message,
@@ -42,13 +41,13 @@ export const create = async (body: string) => {
       TransactItems: [
         {
           Put: {
-            TableName: "products",
+            TableName: process.env.PRODUCTS_TABLE_NAME,
             Item: product,
           },
         },
         {
           Put: {
-            TableName: "stocks",
+            TableName: process.env.STOCKS_TABLE_NAME,
             Item: stock,
           },
         },
@@ -57,16 +56,18 @@ export const create = async (body: string) => {
 
     const transactResponse = await docClient.send(transactCommand);
 
+    console.log("Products successfully added into DB");
+
     const resultResponse = {
       product: { ...product },
       stock: { ...stock },
       response: { ...transactResponse },
     };
 
-    return buildResponse(StatusCodes.OK, resultResponse);
+    return buildResponse(StatusCodes.CREATED, resultResponse);
   } catch (error) {
-    console.error(error);
+    console.log(error);
 
-    throw new Error((error as Error).message);
+    return buildResponse(StatusCodes.INTERNAL_SERVER_ERROR, { message: error });
   }
 };
